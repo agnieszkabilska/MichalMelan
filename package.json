@@ -1,0 +1,31 @@
+{
+  "name": "MichalMelan",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "sanity": "cd studio && sanity",
+    "seed": "node scripts/seed-sanity.mjs"
+  },
+  "dependencies": {
+    "@nuxtjs/sanity": "^2.5.0",
+    "@sanity/client": "^8.6.1",
+    "@sanity/image-url": "^2.1.1",
+    "@sanity/vision": "^6.13.2",
+    "nuxt": "^4.5.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "sanity": "^6.13.2",
+    "styled-components": "^6.5.3",
+    "vue": "^3.5.42",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.11"
+  }
+}
