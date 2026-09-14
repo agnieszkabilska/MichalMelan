@@ -56,3 +56,44 @@ npm run sanity -- cors add https://*.vercel.app --credentials   # podglądy Verc
 | `npm run build` | build produkcyjny (to samo uruchamia Vercel) |
 | `npm run seed` | jednorazowe zasilenie Sanity treścią |
 | `npm run sanity -- <cmd>` | Sanity CLI w kontekście `studio/` (np. `manage`, `cors list`, `dataset export`) |
+
+## Podpięcie domeny z home.pl do Vercela
+
+Domena pozostaje w home.pl (rejestrator i DNS), zmieniamy tylko rekordy DNS, żeby wskazywały na Vercel.
+
+### 1. Dodaj domenę w Vercelu
+
+1. Vercel → projekt → **Settings → Domains → Add**.
+2. Wpisz domenę główną, np. `michalmelan.pl`, zatwierdź. Vercel sam zaproponuje też `www.michalmelan.pl` – dodaj obie
+   i ustaw przekierowanie `www` → domena główna (lub odwrotnie, wg preferencji).
+3. Vercel pokaże, jakie rekordy DNS trzeba ustawić (zwykle: rekord **A** dla domeny głównej i **CNAME** dla `www`).
+   Skopiuj wartości dokładnie z tego ekranu – poniższe są standardowe, ale ekran Vercela jest źródłem prawdy.
+
+### 2. Ustaw rekordy DNS w home.pl
+
+1. Zaloguj się na https://panel.home.pl → **Domeny** → wybierz domenę → **Konfiguracja DNS** (lub „Zarządzaj rekordami DNS”).
+2. Jeśli domena korzysta z „DNS home.pl” – edytuj rekordy. Jeśli ma ustawione zewnętrzne serwery DNS, przełącz na DNS home.pl albo edytuj rekordy tam, gdzie faktycznie są.
+3. Usuń istniejące rekordy **A** i **AAAA** dla domeny głównej (`@`) oraz rekord **A/CNAME** dla `www`
+   (domyślnie wskazują na hosting home.pl – zostawienie ich spowoduje losowe wyświetlanie starej strony).
+   **Nie usuwaj** rekordów MX/TXT od poczty, jeśli klient ma pocztę w home.pl.
+4. Dodaj rekordy:
+
+   | Typ   | Nazwa / host | Wartość                | TTL  |
+   |-------|--------------|------------------------|------|
+   | A     | `@`          | `76.76.21.21`          | 3600 |
+   | CNAME | `www`        | `cname.vercel-dns.com` | 3600 |
+
+   W home.pl pole „nazwa” dla domeny głównej bywa puste lub `@`; dla `www` wpisz samo `www` (panel dokleja domenę).
+5. Zapisz. Propagacja trwa zwykle od kilku minut do kilku godzin (maks. 24–48 h).
+
+### 3. Sprawdź i dokończ
+
+1. W Vercelu na liście domen status zmieni się z „Invalid Configuration” na **Valid Configuration**; certyfikat SSL (Let’s Encrypt) Vercel wystawia automatycznie – nic nie trzeba kupować w home.pl.
+2. Sprawdź propagację: `nslookup michalmelan.pl` powinno zwrócić `76.76.21.21`, `nslookup www.michalmelan.pl` → `cname.vercel-dns.com`.
+3. Dodaj domenę do CORS w Sanity (patrz sekcja CORS wyżej): `https://michalmelan.pl` i `https://www.michalmelan.pl`, z „Allow credentials” – inaczej `/studio` na produkcji nie pozwoli się zalogować.
+
+### Uwagi
+
+- Hosting WWW w home.pl staje się niepotrzebny – można go nie przedłużać, ale **domenę i pocztę** trzeba przedłużać nadal.
+- Jeśli home.pl ma włączone „Przekierowanie domeny” lub „Parkowanie” – wyłącz, bo nadpisuje rekordy DNS.
+- Alternatywa (mniej zalecana dla pierwszego wdrożenia): przenieść całą obsługę DNS do Vercela, ustawiając w home.pl serwery nazw `ns1.vercel-dns.com` i `ns2.vercel-dns.com`. Wtedy rekordy poczty (MX) trzeba ręcznie odtworzyć w Vercelu – łatwo o przerwę w działaniu poczty, dlatego preferuj wariant z rekordami A/CNAME.
