@@ -381,10 +381,13 @@ body {
   gap: clamp(1rem, 2.5vw, 2rem);
 }
 
+/* szerokosc i wysokosc podane wprost (nie przez aspect-ratio) - w Safari na iOS
+   kolo w kontenerze flex potrafilo sie splaszczyc */
 .avatar {
-  flex: none;
-  width: clamp(5rem, 7vw, 7.5rem);
-  aspect-ratio: 1;
+  --avatar-size: clamp(5rem, 7vw, 7.5rem);
+  flex: 0 0 var(--avatar-size);
+  width: var(--avatar-size);
+  height: var(--avatar-size);
   border-radius: 50%;
   border: 5px solid var(--purple);
   padding: 4px;
@@ -394,6 +397,7 @@ body {
 .avatar img {
   width: 100%;
   height: 100%;
+  aspect-ratio: 1;
   border-radius: 50%;
   object-fit: cover;
   display: block;
@@ -875,7 +879,7 @@ body {
   }
 
   .avatar {
-    width: clamp(4.5rem, 20vw, 6rem);
+    --avatar-size: clamp(4.5rem, 20vw, 6rem);
     border-width: 4px;
     padding: 3px;
   }
