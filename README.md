@@ -42,10 +42,24 @@ npm run sanity -- cors add https://*.vercel.app --credentials   # podglądy Verc
 
 (albo ręcznie: https://www.sanity.io/manage/project/tbckptwx/api#cors-origins)
 
+## SEO i podgląd linku (Open Graph)
+
+- Meta tagi (`title`, `description`, `og:*`, `twitter:*`, canonical, JSON-LD `Person`) budowane są z sekcji **SEO** dokumentu w Studio.
+  Zakładka „Podgląd linku” pozwala nadpisać tytuł/opis widoczne na LinkedIn, Facebooku, Messengerze.
+- Obrazek `og:image` (1200×630) jest **generowany automatycznie** (`nuxt-og-image`, szablon `app/components/OgImage/Home.satori.vue`)
+  ze zdjęcia, imienia, stanowiska i hasła. W Studio można wgrać własny obrazek („Własny obrazek podglądu”) – wtedy zastępuje generowany.
+- Podgląd wygenerowanego obrazka w dev: adres z `og:image` w źródle strony, albo Nuxt DevTools → OG Image.
+- Fonty do obrazka: Inter (latin + latin-ext, `public/fonts/`, deklaracje w `app/assets/css/og-fonts.css`) – potrzebne dla polskich znaków; strona sama używa fontów systemowych.
+- `robots.txt` i `sitemap.xml` generują moduły `@nuxtjs/robots` i `@nuxtjs/sitemap`; `/studio` jest wykluczone z indeksowania.
+- Adres kanoniczny: `site.url` w `nuxt.config.ts` (`https://www.melan.pl`), nadpisywalny przez `NUXT_SITE_URL`.
+- Weryfikacja po deployu: https://www.opengraph.xyz lub LinkedIn Post Inspector (https://www.linkedin.com/post-inspector/).
+  LinkedIn i Facebook cache’ują podgląd ok. 7 dni – po zmianie obrazka użyj inspektora, żeby odświeżyć.
+
 ## Wdrożenie na Vercel
 
 - Framework: Nuxt (wykrywany automatycznie), build `npm run build`, brak wymaganych zmiennych środowiskowych.
-- Opcjonalne nadpisania: `NUXT_PUBLIC_SANITY_PROJECT_ID`, `NUXT_PUBLIC_SANITY_DATASET`.
+- Zalecane: `NUXT_OG_IMAGE_SECRET` (stały sekret podpisujący URL-e og:image; `npx nuxt-og-image generate-secret`) – bez niego adres obrazka zmienia się po każdym deployu.
+- Opcjonalne nadpisania: `NUXT_SITE_URL`, `NUXT_PUBLIC_SANITY_PROJECT_ID`, `NUXT_PUBLIC_SANITY_DATASET`.
 - Po pierwszym deployu dodaj domenę do CORS (patrz wyżej).
 
 ## Skrypty

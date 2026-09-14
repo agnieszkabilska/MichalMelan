@@ -31,7 +31,14 @@ export interface HomePage {
     emailLabel?: string
     emailCta?: string
   }
-  seo: { title: string, description: string }
+  seo: {
+    title: string
+    description: string
+    keywords?: string[]
+    ogTitle?: string
+    ogDescription?: string
+    ogImage?: SanityImageObject & { alt?: string }
+  }
 }
 
 // Jeden dokument-singleton "homePage" (zob. studio/schemaTypes/homePage.ts)

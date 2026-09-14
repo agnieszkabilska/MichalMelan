@@ -113,12 +113,81 @@ function goTo (id: string) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+// ---------- SEO / Open Graph / dane strukturalne ----------
+const seo = computed(() => page.value!.seo)
+const siteUrl = useSiteConfig().url
+const canonical = siteUrl.replace(/\/$/, '') + '/'
+
+const ogTitle = computed(() => seo.value.ogTitle || seo.value.title)
+const ogDescription = computed(() => seo.value.ogDescription || seo.value.description)
+const avatarAbsolute = computed(() =>
+  hero.value.avatar?.asset
+    ? urlFor(hero.value.avatar).width(600).height(600).fit('crop').url()
+    : canonical + 'michal-melan.jpg'
+)
+
+useSeoMeta({
+  title: () => seo.value.title,
+  description: () => seo.value.description,
+  robots: 'index, follow',
+  ogType: 'profile',
+  ogLocale: 'pl_PL',
+  ogSiteName: () => hero.value.name,
+  ogUrl: canonical,
+  ogTitle,
+  ogDescription,
+  twitterCard: 'summary_large_image',
+  twitterTitle: ogTitle,
+  twitterDescription: ogDescription
+})
+
+// og:image - wlasny obrazek z Sanity, a gdy go brak: generowany z tresci strony (app/components/OgImage/Home.vue)
+if (seo.value.ogImage?.asset) {
+  const customOg = urlFor(seo.value.ogImage).width(1200).height(630).fit('crop').format('jpg').url()
+  useSeoMeta({
+    ogImage: customOg,
+    ogImageWidth: 1200,
+    ogImageHeight: 630,
+    ogImageType: 'image/jpeg',
+    ogImageAlt: seo.value.ogImage.alt || ogTitle.value,
+    twitterImage: customOg,
+    twitterImageAlt: seo.value.ogImage.alt || ogTitle.value
+  })
+} else {
+  defineOgImage('Home', {
+    name: hero.value.name,
+    role: hero.value.role,
+    tagline: hero.value.tagline,
+    avatar: avatarAbsolute.value,
+    siteUrl
+  }, { alt: ogTitle.value })
+}
+
+const jsonLd = computed(() => ({
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: hero.value.name,
+  jobTitle: hero.value.role,
+  description: seo.value.description,
+  url: canonical,
+  image: avatarAbsolute.value,
+  email: contact.value.email ? 'mailto:' + contact.value.email : undefined,
+  telephone: contact.value.phone || undefined,
+  sameAs: contact.value.linkedin ? [contact.value.linkedin] : undefined,
+  knowsAbout: services.value.cards.map(c => c.title),
+  worksFor: experience.value.jobs[0]
+    ? { '@type': 'Organization', name: experience.value.jobs[0].company }
+    : undefined
+}))
+
 useHead({
-  title: () => page.value?.seo.title ?? '',
-  meta: [
-    { name: 'description', content: () => page.value?.seo.description ?? '' }
-  ],
-  htmlAttrs: { lang: 'pl' }
+  htmlAttrs: { lang: 'pl' },
+  meta: [{ name: 'keywords', content: () => seo.value.keywords?.join(', ') || '' }],
+  link: [{ rel: 'canonical', href: canonical }],
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: () => JSON.stringify(jsonLd.value)
+  }]
 })
 </script>
 
@@ -130,7 +199,7 @@ useHead({
         <div class="intro">
           <header class="hero">
             <div class="avatar">
-              <img :src="avatarSrc" :alt="hero.avatar?.alt || hero.name" width="512" height="512">
+              <img :src="avatarSrc" :alt="hero.avatar?.alt || hero.name" width="512" height="512" fetchpriority="high" decoding="async">
             </div>
             <div class="hero-text">
               <h1>{{ hero.name }}</h1>
