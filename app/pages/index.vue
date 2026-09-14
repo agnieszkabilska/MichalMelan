@@ -209,7 +209,7 @@ useHead({
 
           <p class="tagline">
             <template v-for="(line, i) in taglineLines" :key="i">
-              <br v-if="i > 0">{{ line }}
+              <br v-if="i > 0" class="tagline-br">{{ (i > 0 ? ' ' : '') + line }}
             </template>
           </p>
         </div>
@@ -227,6 +227,8 @@ useHead({
             <span class="nav-line" />
             <span class="nav-label">{{ item.label }}</span>
           </button>
+          <!-- na telefonie nawigacja jest przyklejona u gory; postep czytania pokazuje cienka linia pod nia -->
+          <span class="nav-progress" aria-hidden="true" :style="{ transform: 'scaleX(' + progress + ')' }" />
         </nav>
 
         <footer class="contact">
@@ -827,44 +829,263 @@ body {
 }
 
 /* ponizej tej szerokosci jedna linia przestaje sie miescic czytelnie */
-@media (max-width: 1100px) {
+
+/* pasek postepu pod nawigacja - na desktopie ukryty (jest szyna miedzy kolumnami) */
+.nav-progress {
+  display: none;
+}
+
+/* ---------- TABLET / LAPTOP O WASKIM EKRANIE ----------
+   ponizej tej szerokosci jedna linia tytulu w osi czasu przestaje sie miescic czytelnie */
+@media (max-width: 1280px) {
   .job-role {
     white-space: normal;
   }
 }
 
-/* ---------- MOBILE ---------- */
-@media (max-width: 900px) {
-  .pane {
-    position: static;
-    width: auto;
-    min-height: auto;
-    padding: 3.5rem 1.25rem;
+/* ---------- MOBILE ----------
+   Uklad dwukolumnowy zamienia sie w jedna kolumne w kolejnosci:
+   naglowek (zdjecie, imie, tagline) -> przyklejona nawigacja -> tresc -> kontakt.
+   Lewa kolumna "rozpuszcza sie" (display: contents), zeby jej dzieci
+   dalo sie ulozyc przemiennie z trescia. */
+@media (max-width: 1023px) {
+  .layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
   }
 
+  .pane,
   .pane-inner {
-    max-width: 34rem;
-    justify-content: flex-start;
-    gap: 2.75rem;
+    display: contents;
   }
 
   .divider {
     display: none;
   }
 
+  /* --- naglowek --- */
+  .intro {
+    order: 0;
+    padding: clamp(2rem, 6vh, 3.5rem) clamp(1.25rem, 5vw, 2.5rem) clamp(1.5rem, 4vh, 2.5rem);
+  }
+
+  .hero {
+    gap: 1.1rem;
+  }
+
+  .avatar {
+    width: clamp(4.5rem, 20vw, 6rem);
+    border-width: 4px;
+    padding: 3px;
+  }
+
+  .hero-text h1 {
+    white-space: normal;
+    font-size: clamp(1.55rem, 7vw, 2.3rem);
+  }
+
+  .role {
+    font-size: clamp(1rem, 4.2vw, 1.3rem);
+  }
+
+  .tagline {
+    margin-top: 1.25rem;
+    font-size: clamp(0.95rem, 3.8vw, 1.05rem);
+    text-wrap: pretty;
+  }
+
+  /* na waskim ekranie tekst lamie sie sam - wymuszone lamania z Sanity daloby postrzepiony akapit */
+  .tagline-br {
+    display: none;
+  }
+
+  /* --- nawigacja przyklejona u gory --- */
+  .nav {
+    order: 1;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: clamp(0.75rem, 3vw, 2rem);
+    padding: 0.75rem clamp(1.25rem, 5vw, 2.5rem) 0.6rem;
+    background: rgba(236, 236, 234, 0.86);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(160%);
+  }
+
+  /* pasek nawigacji zamienia sie w podkreslenie pod etykieta */
+  .nav-item {
+    /* szerokosc wg dlugosci etykiety - dlugie etykiety z Sanity nie sa sciskane */
+    flex: 0 1 auto;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 0.45rem;
+    padding: 0.35rem 0;
+    min-height: 44px;
+    justify-content: flex-end;
+  }
+
+  .nav-line {
+    width: 100%;
+    background: rgba(17, 17, 17, 0.18);
+    transition: background-color 0.35s ease;
+  }
+
+  .nav-item.is-active .nav-line {
+    width: 100%;
+  }
+
+  .nav-label {
+    font-size: clamp(0.8rem, 3.4vw, 0.95rem);
+    text-align: center;
+    color: var(--muted);
+    white-space: normal;
+  }
+
+  .nav-progress {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--purple-ink);
+    transform-origin: left center;
+    transform: scaleX(0);
+  }
+
+  /* --- tresc --- */
   .content {
-    margin: 0 0.75rem 0.75rem;
-    padding: 1.5rem 1.25rem;
+    order: 2;
+    margin: 0.5rem clamp(0.75rem, 2vw, 1.5rem) 0;
+    padding: 0 clamp(1.15rem, 5vw, 2.5rem);
     border-radius: 1.5rem;
   }
 
   .section {
     min-height: auto;
-    padding: 3.5rem 0;
+    padding: clamp(2.75rem, 8vh, 4rem) 0;
+    /* zeby po kliknieciu w nawigacje tytul nie chowal sie pod przyklejonym paskiem */
+    scroll-margin-top: 4.5rem;
+  }
+
+  .section-title {
+    margin-bottom: 1.25rem;
+    font-size: clamp(1.5rem, 6.5vw, 2rem);
   }
 
   .section :deep(p) {
+    font-size: clamp(0.95rem, 4vw, 1.05rem);
+    line-height: 1.7;
     text-align: left;
+    hyphens: manual;
+  }
+
+  /* karty w jednej kolumnie na telefonie, w dwoch od ~480px */
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .card h3 {
+    min-height: 0;
+    font-size: 1rem;
+  }
+
+  .card p {
+    font-size: 0.88rem;
+  }
+
+  /* os czasu: firma i miejsce w osobnych wierszach, bez kropek-separatorow */
+  .timeline {
+    --rail-x: 1rem;
+    --dot-size: 0.85rem;
+    --gap: 1.75rem;
+  }
+
+  .job {
+    font-size: 1rem;
+  }
+
+  .dot {
+    display: none;
+  }
+
+  .job-company {
+    display: block;
+    margin-top: 0.15rem;
+  }
+
+  .job-period {
+    font-size: 0.85rem;
+  }
+
+  /* --- kontakt na koncu strony --- */
+  .contact {
+    order: 3;
+    padding: clamp(2.5rem, 7vh, 3.5rem) clamp(1.25rem, 5vw, 2.5rem) clamp(2rem, 6vh, 3rem);
+  }
+
+  .contact-hook {
+    font-size: 1.1rem;
+  }
+
+  .contact-title {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+
+  .contact-list {
+    gap: 0.85rem;
+  }
+
+  .contact-list a,
+  .contact-list button {
+    width: 2.9rem;
+    height: 2.9rem;
+  }
+
+  .contact-list svg {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+
+  /* --- okienko kontaktowe --- */
+  .modal-backdrop {
+    padding: 1rem;
+  }
+
+  .modal {
+    padding: 2.5rem 1.5rem 1.75rem;
+    border-radius: 1.25rem;
+  }
+
+  .modal-call {
+    display: block;
+    padding: 0.95rem 1.5rem;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 1023px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* na tablecie etykiety zbiera sie przy lewej krawedzi, jak na desktopie */
+  .nav {
+    justify-content: flex-start;
+    gap: 2.5rem;
+  }
+}
+
+/* na telefonach nie ma hovera - efekt "unoszenia" tylko tam, gdzie jest wskaznik */
+@media (hover: none) {
+  .contact-list a:hover,
+  .contact-list button:hover,
+  .modal-call:hover {
+    transform: none;
   }
 }
 
